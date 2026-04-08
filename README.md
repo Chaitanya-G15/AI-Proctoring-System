@@ -111,7 +111,7 @@ AI-Proctoring-System/
 ## 🙌 Credits
 
 * Original project by: AaravMehta-07
-* Enhanced and upgraded by: *Your Name*
+* Enhanced and upgraded by: *Chaitanya-G15*
 
 Enhancements include:
 
