@@ -1,0 +1,7 @@
+violations/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pt
+yolov8n.pt

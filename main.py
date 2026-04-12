@@ -184,6 +184,7 @@ from ultralytics import YOLO
 import time
 import os
 import winsound   # For sound alert (Windows)
+from datetime import datetime
 
 # ================= INITIAL SETUP =================
 mp_face_mesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True)
@@ -226,9 +227,37 @@ model_points = np.array([
 # ================= FUNCTIONS =================
 
 def save_violation(frame, label):
+    # Create a copy to avoid modifying the display frame
+    save_frame = frame.copy()
+
+    # Get formatted timestamp
     timestamp = int(time.time())
+    timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Add timestamp text to the image (bottom-right corner with background)
+    text = f"Time: {timestamp_str}"
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.6
+    thickness = 2
+
+    # Get text size for background rectangle
+    (text_width, text_height), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+
+    # Position at bottom-right corner
+    height, width = save_frame.shape[:2]
+    x = width - text_width - 20
+    y = height - 20
+
+    # Draw black background rectangle
+    cv2.rectangle(save_frame, (x - 10, y - text_height - 10),
+                  (x + text_width + 10, y + baseline + 10), (0, 0, 0), -1)
+
+    # Draw timestamp text in white
+    cv2.putText(save_frame, text, (x, y), font, font_scale, (255, 255, 255), thickness)
+
+    # Save the frame with timestamp
     filename = f"violations/{label}_{timestamp}.jpg"
-    cv2.imwrite(filename, frame)
+    cv2.imwrite(filename, save_frame)
 
 def show_alert(frame, message, y_pos=50):
     global last_beep_time
