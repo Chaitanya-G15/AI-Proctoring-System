@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>AI Proctored Exam - Student</title>
+    <link rel="stylesheet" href="/static/style.css?v=2.0">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Proctored Exam</h1>
+
+        <!-- Waiting Screen -->
+        <div id="waitingScreen" style="display:none;">
+            <div class="join-box">
+                <h2>⏳ Waiting for Exam to Start</h2>
+                <p>The exam has not started yet. Please wait for your teacher to begin the session.</p>
+                <div class="spinner"></div>
+                <p class="wait-message">Checking status...</p>
+            </div>
+        </div>
+
+        <!-- Join Screen -->
+        <div id="joinScreen">
+            <div class="join-box">
+                <h2>Join Exam</h2>
+                <p>Enter your name to begin the proctored exam session</p>
+                <input type="text" id="studentName" placeholder="Enter your name" autofocus>
+                <button onclick="joinExam()" class="btn-primary">Join Exam</button>
+            </div>
+        </div>
+
+        <!-- Calibration Screen -->
+        <div id="calibrationScreen" style="display:none;">
+            <div class="calibration-box">
+                <h2>Calibration</h2>
+                <p>Please look directly at the camera and keep your face straight</p>
+                <p class="calibration-timer" id="calibrationTimer">3</p>
+                <video id="calibrationVideo" autoplay playsinline></video>
+                <p class="calibration-instruction">Calibrating... Hold still!</p>
+            </div>
+        </div>
+
+        <!-- Exam Screen -->
+        <div id="examScreen" style="display:none;">
+            <div class="exam-layout">
+                <!-- Webcam Section -->
+                <div class="webcam-section">
+                    <div class="webcam-container">
+                        <video id="video" autoplay playsinline></video>
+                        <div id="statusBadge" class="badge-focused">Focused</div>
+                    </div>
+                </div>
+
+                <!-- Exam Content Section -->
+                <div class="exam-content">
+                    <div id="violationAlert" class="alert" style="display:none;"></div>
+
+                    <h2>Sample Exam Questions</h2>
+
+                    <div class="question">
+                        <h3>Question 1</h3>
+                        <p>What is 2 + 2?</p>
+                        <input type="text" placeholder="Your answer" class="answer-input">
+                    </div>
+
+                    <div class="question">
+                        <h3>Question 2</h3>
+                        <p>What is the capital of France?</p>
+                        <input type="text" placeholder="Your answer" class="answer-input">
+                    </div>
+
+                    <div class="question">
+                        <h3>Question 3</h3>
+                        <p>What is 10 x 5?</p>
+                        <input type="text" placeholder="Your answer" class="answer-input">
+                    </div>
+
+                    <button class="btn-primary" onclick="submitExam()">Submit Exam</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/student.js?v=2.0"></script>
+</body>
+</html>

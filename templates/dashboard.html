@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Proctor Dashboard - AI Proctoring System</title>
+    <link rel="stylesheet" href="/static/style.css?v=2.0">
+    <meta http-equiv="refresh" content="3">  <!-- Auto-refresh every 3 seconds -->
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Proctor Dashboard</h1>
+            <div class="dashboard-controls">
+                <button id="startExamBtn" class="btn-start" onclick="startExam()">
+                    ▶ Start Exam
+                </button>
+                <button id="stopExamBtn" class="btn-stop" onclick="stopExam()" style="display:none;">
+                    ⏸ Stop Exam
+                </button>
+                <div class="dashboard-info">
+                    <div class="info-badge" id="examStatus">
+                        <span class="status-dot status-stopped"></span>
+                        Exam Not Started
+                    </div>
+                    <div class="info-badge">
+                        <span id="studentCount">0</span> Active Students
+                    </div>
+                    <div class="info-badge">
+                        Last updated: <span id="lastUpdate">--:--:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-instructions">
+            <p><strong>Instructions:</strong> This dashboard shows all active students (seen within last 10 seconds). Page refreshes automatically every 3 seconds.</p>
+            <p><strong>Student Access:</strong> Students should navigate to <code id="studentUrl">http://localhost:5000/student</code></p>
+        </div>
+
+        <div id="studentsGrid" class="grid">
+            <!-- Students will be loaded here by JavaScript -->
+            <div class="loading-message">Loading students...</div>
+        </div>
+
+        <div id="noStudents" class="no-students" style="display:none;">
+            <h2>No Active Students</h2>
+            <p>Waiting for students to join...</p>
+            <p>Students should navigate to: <code id="studentUrl2">http://localhost:5000/student</code></p>
+        </div>
+    </div>
+
+    <script>
+        // Start exam
+        async function startExam() {
+            try {
+                const response = await fetch('/api/exam/start', { method: 'POST' });
+                const data = await response.json();
+
+                // Update UI
+                document.getElementById('startExamBtn').style.display = 'none';
+                document.getElementById('stopExamBtn').style.display = 'inline-block';
+                document.getElementById('examStatus').innerHTML = '<span class="status-dot status-active"></span> Exam Started';
+
+                alert('✅ Exam started! Students can now join.');
+            } catch (error) {
+                console.error('Error starting exam:', error);
+                alert('Failed to start exam');
+            }
+        }
+
+        // Stop exam
+        async function stopExam() {
+            if (!confirm('Are you sure you want to stop the exam? Students will not be able to join.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/exam/stop', { method: 'POST' });
+                const data = await response.json();
+
+                // Update UI
+                document.getElementById('startExamBtn').style.display = 'inline-block';
+                document.getElementById('stopExamBtn').style.display = 'none';
+                document.getElementById('examStatus').innerHTML = '<span class="status-dot status-stopped"></span> Exam Stopped';
+
+                alert('⏸ Exam stopped! Students can no longer join.');
+            } catch (error) {
+                console.error('Error stopping exam:', error);
+                alert('Failed to stop exam');
+            }
+        }
+
+        // Check exam status on load
+        async function checkExamStatus() {
+            try {
+                const response = await fetch('/api/exam/status');
+                const data = await response.json();
+
+                if (data.started) {
+                    document.getElementById('startExamBtn').style.display = 'none';
+                    document.getElementById('stopExamBtn').style.display = 'inline-block';
+                    document.getElementById('examStatus').innerHTML = '<span class="status-dot status-active"></span> Exam Started';
+                } else {
+                    document.getElementById('startExamBtn').style.display = 'inline-block';
+                    document.getElementById('stopExamBtn').style.display = 'none';
+                    document.getElementById('examStatus').innerHTML = '<span class="status-dot status-stopped"></span> Exam Not Started';
+                }
+            } catch (error) {
+                console.error('Error checking exam status:', error);
+            }
+        }
+
+        // Load students from API
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/dashboard/students');
+
+                if (!response.ok) {
+                    console.error('Failed to load students');
+                    return;
+                }
+
+                const students = await response.json();
+
+                const grid = document.getElementById('studentsGrid');
+                const noStudents = document.getElementById('noStudents');
+
+                // Update last update time
+                const now = new Date();
+                document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+
+                // Update student count
+                document.getElementById('studentCount').textContent = students.length;
+
+                if (students.length === 0) {
+                    grid.innerHTML = '';
+                    grid.style.display = 'none';
+                    noStudents.style.display = 'block';
+                    return;
+                }
+
+                grid.style.display = 'grid';
+                noStudents.style.display = 'none';
+                grid.innerHTML = '';
+
+                students.forEach(student => {
+                    const card = document.createElement('div');
+                    card.className = 'student-card';
+
+                    // Determine card status
+                    const hasViolations = student.violation_count > 0;
+                    if (hasViolations) {
+                        card.classList.add('has-violations');
+                    }
+
+                    // Screenshot or placeholder
+                    const screenshot = student.latest_screenshot
+                        ? `<img src="/violations/${student.latest_screenshot}" alt="Latest violation screenshot">`
+                        : '<div class="no-screenshot">✓ No violations</div>';
+
+                    // Last seen time
+                    const lastSeen = new Date(student.last_seen);
+                    const secondsAgo = Math.floor((Date.now() - lastSeen.getTime()) / 1000);
+                    const lastSeenText = secondsAgo < 5 ? 'Just now' : `${secondsAgo}s ago`;
+
+                    card.innerHTML = `
+                        <div class="student-header">
+                            <h3>${escapeHtml(student.name)}</h3>
+                            <span class="student-status ${secondsAgo < 5 ? 'status-active' : 'status-idle'}">
+                                ${secondsAgo < 5 ? '● Active' : '○ Idle'}
+                            </span>
+                        </div>
+                        <div class="screenshot">
+                            ${screenshot}
+                        </div>
+                        <div class="student-stats">
+                            <div class="stat">
+                                <span class="stat-label">Violations:</span>
+                                <span class="stat-value ${hasViolations ? 'text-danger' : 'text-success'}">
+                                    ${student.violation_count}
+                                </span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Last seen:</span>
+                                <span class="stat-value">${lastSeenText}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    grid.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Error loading students:', error);
+            }
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Get student URL (use hostname from window.location)
+        function updateStudentUrls() {
+            const studentUrl = `${window.location.protocol}//${window.location.host}/student`;
+            document.getElementById('studentUrl').textContent = studentUrl;
+            const studentUrl2 = document.getElementById('studentUrl2');
+            if (studentUrl2) {
+                studentUrl2.textContent = studentUrl;
+            }
+        }
+
+        // Load students on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateStudentUrls();
+            checkExamStatus();
+            loadStudents();
+        });
+    </script>
+</body>
+</html>
