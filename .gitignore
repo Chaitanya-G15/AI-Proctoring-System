@@ -1,13 +1,30 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.log
+
+# Virtual environments
 env/
 venv/
+.venv/
+
+# AI/ML models
 .yolov5/
 *.onnx
 *.pt
+models/*.pt
+
+# IDE
 .DS_Store
 .idea/
 *.iml
+.vscode/
+
+# Project-specific
+proctoring.db
+violations/
+*.pem
+.ruff_cache/
+.pytest_cache/

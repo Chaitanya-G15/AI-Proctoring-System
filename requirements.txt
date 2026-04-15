@@ -2,3 +2,4 @@ opencv-python>=4.11.0.86
 mediapipe==0.10.21
 ultralytics>=8.4.37
 numpy>=1.26.4
+flask>=2.3.0

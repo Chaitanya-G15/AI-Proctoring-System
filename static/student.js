@@ -4,6 +4,39 @@
 let studentId = null;
 let video = null;
 let detectionInterval = null;
+let statusCheckInterval = null;
+
+// ============= CHECK EXAM STATUS =============
+
+async function checkExamStatus() {
+    try {
+        const response = await fetch('/api/exam/status');
+        const data = await response.json();
+
+        if (data.started) {
+            // Exam started - show join screen
+            document.getElementById('waitingScreen').style.display = 'none';
+            document.getElementById('joinScreen').style.display = 'block';
+
+            // Stop checking
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+        } else {
+            // Exam not started - show waiting screen
+            document.getElementById('joinScreen').style.display = 'none';
+            document.getElementById('waitingScreen').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error checking exam status:', error);
+    }
+}
+
+// Check status on page load and every 3 seconds
+window.addEventListener('DOMContentLoaded', () => {
+    checkExamStatus();
+    statusCheckInterval = setInterval(checkExamStatus, 3000);
+});
 
 // ============= JOIN EXAM =============
 
@@ -155,6 +188,10 @@ function captureFrame(videoElement) {
         }
 
         const ctx = canvas.getContext('2d');
+
+        // Mirror the frame horizontally to match what student sees
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
         ctx.drawImage(videoElement, 0, 0);
 
         // Convert to base64 (JPEG, 80% quality) and remove the prefix
@@ -200,9 +237,10 @@ function startDetection() {
 
             const data = await response.json();
 
-            // Show violations
-            if (data.violations && data.violations.length > 0) {
-                showViolation(data.violations[0].type);
+            // Show violations (use all_violations to show warnings immediately)
+            const violationsToShow = data.all_violations || data.violations || [];
+            if (violationsToShow.length > 0) {
+                showViolation(violationsToShow[0].type);
             } else {
                 hideViolation();
             }

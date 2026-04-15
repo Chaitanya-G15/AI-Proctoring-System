@@ -37,7 +37,7 @@
         </div>
 
         <div class="dashboard-instructions">
-            <p><strong>Instructions:</strong> This dashboard shows all active students (seen within last 10 seconds). Page refreshes automatically every 3 seconds.</p>
+            <p><strong>Instructions:</strong> This dashboard shows all active students (seen within last 15 minutes). Page refreshes automatically every 3 seconds.</p>
             <p><strong>Student Access:</strong> Students should navigate to <code id="studentUrl">http://localhost:5000/student</code></p>
         </div>
 
@@ -157,10 +157,39 @@
                         card.classList.add('has-violations');
                     }
 
+                    // Add click handler to show violation breakdown
+                    card.style.cursor = 'pointer';
+                    card.onclick = () => showViolationBreakdown(student.id, student.name);
+
+                    // Violation type labels
+                    const violationLabels = {
+                        'phone': '📱 Phone',
+                        'book': '📖 Book',
+                        'multiple_people': '👥 Multiple People',
+                        'not_focused': '👀 Not Focused'
+                    };
+
                     // Screenshot or placeholder
-                    const screenshot = student.latest_screenshot
-                        ? `<img src="/violations/${student.latest_screenshot}" alt="Latest violation screenshot">`
-                        : '<div class="no-screenshot">✓ No violations</div>';
+                    let screenshot;
+                    if (student.latest_screenshot) {
+                        const violationType = student.screenshot_violation_type || 'unknown';
+                        const label = violationLabels[violationType] || violationType;
+                        const confidence = student.screenshot_confidence;
+
+                        // Format confidence percentage if available
+                        const confidenceText = confidence ? ` (${Math.round(confidence * 100)}%)` : '';
+
+                        screenshot = `
+                            <div style="position: relative;">
+                                <img src="/violations/${student.latest_screenshot}" alt="Violation screenshot">
+                                <div style="position: absolute; top: 10px; left: 10px; background: rgba(220, 53, 69, 0.9); color: white; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                                    ${label}${confidenceText}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        screenshot = '<div class="no-screenshot">✓ No violations</div>';
+                    }
 
                     // Last seen time
                     const lastSeen = new Date(student.last_seen);
@@ -196,6 +225,48 @@
 
             } catch (error) {
                 console.error('Error loading students:', error);
+            }
+        }
+
+        // Show violation breakdown for a student
+        async function showViolationBreakdown(studentId, studentName) {
+            try {
+                const response = await fetch(`/api/dashboard/student/${studentId}/violations`);
+
+                if (!response.ok) {
+                    alert('Failed to load violation data');
+                    return;
+                }
+
+                const data = await response.json();
+
+                // Format violation types for display
+                const violationLabels = {
+                    'not_focused': 'Not Focused',
+                    'phone': 'Phone Detected',
+                    'multiple_people': 'Multiple People',
+                    'book': 'Book Detected'
+                };
+
+                // Build message
+                let message = `📊 Violation Breakdown for ${studentName}\n\n`;
+                message += `Total Violations: ${data.total_violations}\n\n`;
+
+                if (data.total_violations === 0) {
+                    message += '✓ No violations detected';
+                } else {
+                    message += 'Breakdown by type:\n';
+                    for (const [type, count] of Object.entries(data.violations_by_type)) {
+                        const label = violationLabels[type] || type;
+                        message += `  • ${label}: ${count}\n`;
+                    }
+                }
+
+                alert(message);
+
+            } catch (error) {
+                console.error('Error fetching violation breakdown:', error);
+                alert('Failed to load violation data');
             }
         }
 

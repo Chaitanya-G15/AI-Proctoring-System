@@ -65,6 +65,87 @@ code {
     transform: translateY(0);
 }
 
+.btn-start {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    margin-right: 15px;
+}
+
+.btn-start:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+}
+
+.btn-stop {
+    background: #ffc107;
+    color: #333;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    margin-right: 15px;
+}
+
+.btn-stop:hover {
+    background: #e0a800;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+}
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-active {
+    background: #28a745;
+    animation: pulse-green 2s infinite;
+}
+
+.status-stopped {
+    background: #dc3545;
+}
+
+@keyframes pulse-green {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 30px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.wait-message {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+}
+
 /* ============= JOIN SCREEN ============= */
 
 #joinScreen {
@@ -156,6 +237,7 @@ video {
     width: 100%;
     border-radius: 8px;
     border: 3px solid #ddd;
+    transform: scaleX(-1);  /* Mirror the video horizontally */
 }
 
 .badge-focused {
@@ -253,17 +335,24 @@ video {
 /* ============= DASHBOARD ============= */
 
 .dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 20px;
     padding-bottom: 20px;
     border-bottom: 2px solid #eee;
 }
 
+.dashboard-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+}
+
 .dashboard-info {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .info-badge {
